@@ -53,7 +53,10 @@ Besides, following libs are needed:
 
 These codes are tested on Mac OS and ubuntu. 
 
-## contacts
+## Contacts
 Dr. Zhiling Luo luozhiling@zju.edu.cn http://www.bruceluo.net
 
 Yinghua Cui yhcui@zju.edu.cn
+
+## Citation
+Zhiling Luo, Yinghua Cui, Sha Zhao, Jianwei Yin. g-Inspector: Recurrent Attention Model on Graph. IEEE Transactions on Knowledge and Data Engineering. 2020.
