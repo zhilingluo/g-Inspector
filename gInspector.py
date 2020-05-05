@@ -19,10 +19,12 @@ max_node = dataset.max_node_num
 observation_size = dataset.node_dim
 n_classes = dataset.n_classes
 
+
 n_hiddens = arg.hidden_layers
 instruction_length = arg.instruction_length
 batch_size = arg.batch_size
 max_iters = arg.iter
+
 
 save_dir = "chckPts/"
 
@@ -54,8 +56,7 @@ def weight_variable(shape, myname, train):
 
 
 def shiftOperation(graphs, neighbors, normInstruction, curId):
-    d = tf.convert_to_tensor(np.array([[max_distance for _ in range(instruction_length)] for _ in range(batch_size)]),
-                             dtype=tf.float32)
+    d = tf.convert_to_tensor(np.array([[max_distance for _ in range(instruction_length)] for _ in range(batch_size)]), dtype=tf.float32)
     shiftInstrutions = tf.cast(tf.round(tf.multiply(((normInstruction + 1) / 2.0), d)), tf.int32)
 
     curId = tf.cast(curId, tf.int32)
@@ -95,8 +96,7 @@ def getObservedFeature(instruction, curId):
     act_siv_hidden = tf.nn.relu(tf.matmul(instruction, Wi_i_h) + Bi_i_h)
 
     # the hidden units that integrates the shift instruction vector & the glimpses
-    observedFeature = tf.nn.relu(
-        tf.matmul(act_obs_hidden, Wi_ho_of1) + tf.matmul(act_siv_hidden, Wi_hi_of1) + Bi_hohi_of1)
+    observedFeature = tf.nn.relu(tf.matmul(act_obs_hidden, Wi_ho_of1) + tf.matmul(act_siv_hidden, Wi_hi_of1) + Bi_hohi_of1)
     return observedFeature, nextId
 
 
@@ -112,6 +112,7 @@ def getNextObservtion(output, nextId):
 
     # add noise
     sample_siv = tf.maximum(-1.0, tf.minimum(1.0, mean_siv + tf.random_normal(mean_siv.get_shape(), 0, siv_sd)))
+
 
     sample_siv = tf.stop_gradient(sample_siv)
     sampled_sivs.append(sample_siv)
@@ -155,8 +156,7 @@ def model():
         # forward prop
         with tf.variable_scope("coreNetwork", reuse=REUSE):
             # the next hidden state is a function of the previous hidden state and the current observed feature
-            hiddenState = tf.nn.relu(
-                affineTransform(hiddenState_prev, cell_size) + (tf.matmul(observation, Wc_o_h) + Bc_o_h))
+            hiddenState = tf.nn.relu(affineTransform(hiddenState_prev, cell_size) + (tf.matmul(observation, Wc_o_h) + Bc_o_h))
 
         # save the current observed feature and the hidden state
         inputs[t] = observation
@@ -176,7 +176,7 @@ def multi():
     for i in range(agent):
         output = model()
         memory += output
-    return memory / agent
+    return memory/agent
 
 
 # Convert class labels from scalars to one-hot vectors
@@ -216,7 +216,7 @@ def calc_reward(outputs):
     R = tf.reshape(R, (batch_size, 1))
     R = tf.tile(R, [1, n_hiddens * instruction_length])
 
-    p_siv = gaussian_pdf(mean_sivs, sampled_sivs)
+    p_siv= gaussian_pdf(mean_sivs, sampled_sivs)
     p_siv = tf.tanh(p_siv)
     p_siv = tf.reshape(p_siv, (batch_size, n_hiddens * instruction_length))
 
@@ -235,6 +235,7 @@ def calc_reward(outputs):
         tf.log(p_y)), tf.reduce_mean(tf.log(p_siv))
 
 
+
 def evaluate(data):
     batches_in_epoch = len(data.graphs) // batch_size
     if batches_in_epoch < 1:
@@ -243,7 +244,7 @@ def evaluate(data):
     accuracy = 0
 
     for i in xrange(batches_in_epoch):
-        nextX, nextY, neighbor, nodes_num = dataset.train.next_batch(batch_size)
+        nextX, nextY, neighbor, nodes_num = data.next_batch(batch_size)
 
         feed_dict = {inputs_placeholder: nextX, labels_placeholder: nextY, \
                      onehot_labels_placeholder: dense_to_one_hot(nextY), \
@@ -254,7 +255,6 @@ def evaluate(data):
     accuracy /= batches_in_epoch
     print("ACCURACY: %.4f" % accuracy)
     return accuracy
-
 
 with tf.Graph().as_default():
     global_step = tf.Variable(0, trainable=False)
@@ -278,6 +278,7 @@ with tf.Graph().as_default():
     Wi_o_h = weight_variable((observation_size, hg_size), "inspectionNet_wts_observation_hidden", True)
     Bi_o_h = weight_variable((1, hg_size), "inspectionNet_bias_observation_hidden", True)
 
+
     Wi_ho_of1 = weight_variable((hg_size, g_size), "inspectionNet_wts_hiddenObservation_observationFeature1", True)
     Wi_hi_of1 = weight_variable((hl_size, g_size), "inspectionNet_wts_hiddenInstruction_observationFeature1", True)
     Bi_hohi_of1 = weight_variable((1, g_size), "inspectionNet_bias_hObservation_hInstruction_observationFeature1", True)
@@ -285,8 +286,10 @@ with tf.Graph().as_default():
     Wc_o_h = weight_variable((cell_size, g_size), "coreNet_wts_observation_hidden", True)
     Bc_o_h = weight_variable((1, g_size), "coreNet_bias_observation_hidden", True)
 
+
     Wb_h_b = weight_variable((g_size, 1), "baselineNet_wts_hiddenState_baseline", True)
     Bb_h_b = weight_variable((1, 1), "baselineNet_bias_hiddenState_baseline", True)
+
 
     Wa_h_i = weight_variable((cell_out_size, instruction_length), "actionNet_wts_hidden_instruction", True)
 
@@ -338,6 +341,7 @@ with tf.Graph().as_default():
         results = sess.run(fetches, feed_dict=feed_dict)
         _, cost_fetched, reward_fetched, prediction_labels_fetched, correct_labels_fetched, observed_graphs_fetched, \
         avg_b_fetched, rminusb_fetched, mean_sivs_fetched, sampled_sivs_fetched, lr_fetched = results
+
 
         duration = time.time() - start_time
 
